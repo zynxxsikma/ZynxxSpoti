@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify KW | Zynxx Sigma</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea, #3498, pink, #ff99aa,#ff99aa);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .music-player {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(255, 105, 180, 0.4);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .music-player:hover {
+            transform: translateY(-5px);
+        }
+
+        .cover {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cover::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .cover.active {
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .song-info {
+            margin-bottom: 20px;
+        }
+
+        .song-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .artist {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 30px 0 20px;
+            cursor: pointer;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #fb00ff, #00e5ff, #00ff7b);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.1s linear;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                        rgba(255,255,255,0) 0%, 
+                        rgba(255,255,255,0.4) 50%, 
+                        rgba(255,255,255,0) 100%);
+            animation: shimmer 2s infinite;
+            transform: translateX(-100%);
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(90deg, #ff758c, #ff7eb3);
+        }
+
+        .play-btn i {
+            margin-left: 3px;
+        }
+
+        .playlist {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .playlist::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .playlist::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .playlist::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+        }
+
+        .playlist li {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, rgba(255,105,180,0.1), rgba(100,149,237,0.1));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .playlist li:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .playlist li.active {
+            background: rgba(255, 117, 140, 0.2);
+            border-left: 3px solid #ff758c;
+        }
+
+        .song-duration {
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        i {
+            font-style: normal;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="music-player">
+        <div class="cover">
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/857713ed-4aa2-4bab-aab9-10b83594aeda.png" alt="Album cover artwork featuring minimalist music notes on pink gradient background" />
+        </div>
+        
+        <div class="song-info">
+            <h1 class="song-title">Judul Lagu</h1>
+            <p class="artist">Artis</p>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress"></div>
+        </div>
+        
+        <div class="time-info">
+            <span class="current-time">0:00</span>
+            <span class="duration">3:46</span>
+        </div>
+        
+        <div class="controls">
+            <div class="control-btn prev-btn">
+                <i>⏮</i>
+            </div>
+            <div class="control-btn play-btn">
+                <i>▶</i>
+            </div>
+            <div class="control-btn next-btn">
+                <i>⏭</i>
+            </div>
+        </div>
+        
+        <ul class="playlist">
+            <li class="active">
+                <div>
+                    <span class="song-name">Mata Air</span>
+                    <br>
+                    <span class="song-artist">Hindia</span>
+                </div>
+                <span class="song-duration">3:46</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Tarot</span>
+                    <br>
+                    <span class="song-artist">.Feast</span>
+                </div>
+                <span class="song-duration">4:48</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Everything you are</span>
+                    <br>
+                    <span class="song-artist">Hindia</span>
+                </div>
+                <span class="song-duration">3:56</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Ribuan Memori</span>
+                    <br>
+                    <span class="song-artist">Lomba Sihir</span>
+                </div>
+                <span class="song-duration">4:14</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Rumah Ke Rumah</span>
+                    <br>
+                    <span class="song-artist">Hindia</span>
+                </div>
+                <span class="song-duration">4:37</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Cincin</span>
+                    <br>
+                    <span class="song-artist">Hindia</span>
+                </div>
+                <span class="song-duration">4:26</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Secukupnya</span>
+                    <br>
+                    <span class="song-artist">Hindia</span>
+                </div>
+                <span class="song-duration">3:25</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Evaluasi</span>
+                    <br>
+                    <span class="song-artist">Hindia</span>
+                </div>
+                <span class="song-duration">3:14</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Nina</span>
+                    <br>
+                    <span class="song-artist">.Feast</span>
+                </div>
+                <span class="song-duration">4:37</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">O_Tuan</span>
+                    <br>
+                    <span class="song-artist">.Feast</span>
+                </div>
+                <span class="song-duration">5:05</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Bergema Sampai Selamanya</span>
+                    <br>
+                    <span class="song-artist">Nadhif Basalamah</span>
+                </div>
+                <span class="song-duration">3:18</span>
+            </li>
+            <li>
+                <div>
+                    <span class="song-name">Penjaga Hati</span>
+                    <br>
+                    <span class="song-artist">Nadhif Basalamah</span>
+                </div>
+                <span class="song-duration">4:20</span>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Daftar lagu
+            const songs = [
+                {
+                    title: "Mata Air",
+                    artist: "Hindia",
+                    cover: "SpotiDown.App - Mata Air - Hindia.png", 
+                    audio: "Mata Air.mp3",
+                    duration: "3:46"
+                },
+                {
+                    title: "Tarot",
+                    artist: ".Feast",
+                    cover: "SpotiDown.App - Tarot - .Feast.jpg",
+                    audio: "SpotiDown.App - Tarot - .Feast.mp3",
+                    duration: "4:48"
+                },
+                {
+                    title: "Everything you are",
+                    artist: "Hindia",
+                    cover: "SpotiDown.App - everything u are - Hindia.jpeg", 
+                    audio: "SpotiDown.App - everything u are - Hindia.mp3",
+                    duration: "3:56"
+                },
+                {
+                    title: "Ribuan Memori",
+                    artist: "Lomba Sihir",
+                    cover: "SpotiDown.App - Ribuan Memori - Lomba Sihir.jpeg", 
+                    audio: "SpotiDown.App - Ribuan Memori - Lomba Sihir.mp3",
+                    duration: "4:14"
+                }, 
+                {
+                    title: "Rumah Ke Rumah",
+                    artist: "Hindia",
+                    cover: "SpotiDown.App - Mata Air - Hindia.png",
+                    audio: "SpotiDown.App - Rumah Ke Rumah - Hindia.mp3",
+                    duration: "4:37"
+                },
+                {
+                    title: "Cincin",
+                    artist: "Hindia",
+                    cover: "SpotiDown.App - Cincin - Hindia.jpeg", 
+                    audio: "SpotiDown.App - Cincin - Hindia.mp3",
+                    duration: "4:26"
+                },
+                {
+                    title: "Secukupnya",
+                    artist: "Hindia",
+                    cover: "SpotiDown.App - Mata Air - Hindia.png", 
+                    audio: "SpotiDown.App - Secukupnya - Hindia.mp3",
+                    duration: "3:25"
+                },
+                {
+                    title: "Evaluasi",
+                    artist: "Hindia",
+                    cover: "SpotiDown.App - Mata Air - Hindia.png", 
+                    audio: "SpotiDown.App - Evaluasi - Hindia.mp3",
+                    duration: "3:14"
+                },
+                {
+                    title: "Nina",
+                    artist: ".Feast",
+                    cover: "SpotiDown.App - Nina - .Feast.jpeg", 
+                    audio: "SpotiDown.App - Nina - .Feast.mp3",
+                    duration: "4:37"
+                },
+                {
+                    title: "O_Tuan",
+                    artist: ".Feast",
+                    cover: "SpotiDown.App - Tarot - .Feast.jpg", 
+                    audio: "SpotiDown.App - o_Tuan - .Feast.mp3",
+                    duration: "5:05"
+                },
+                {
+                    title: "Bergema Sampai Selamanya",
+                    artist: "Nadhif Basalamah",
+                    cover: "SpotiDown.App - bergema sampai selamanya - Nadhif Basalamah.jpeg", 
+                    audio: "SpotiDown.App - bergema sampai selamanya - Nadhif Basalamah.mp3",
+                    duration: "3:18"
+                },
+                {
+                    title: "Penjaga Hati",
+                    artist: "Nadhif Basalamah",
+                    cover: "SpotiDown.App - penjaga hati - Nadhif Basalamah.jpeg", 
+                    audio: "SpotiDown.App - penjaga hati - Nadhif Basalamah.mp3",
+                    duration: "4:20"
+                },
+                
+            ];
+
+            // Elemen DOM
+            const cover = document.querySelector('.cover');
+            const coverImg = cover.querySelector('img');
+            const songTitle = document.querySelector('.song-title');
+            const songArtist = document.querySelector('.artist');
+            const progressBar = document.querySelector('.progress');
+            const currentTimeEl = document.querySelector('.current-time');
+            const durationEl = document.querySelector('.duration');
+            const playBtn = document.querySelector('.play-btn');
+            const prevBtn = document.querySelector('.prev-btn');
+            const nextBtn = document.querySelector('.next-btn');
+            const playlistItems = document.querySelectorAll('.playlist li');
+            const audio = new Audio();
+
+            // Variabel state
+            let currentSongIndex = 0;
+            let isPlaying = false;
+
+            // Fungsi untuk memuat lagu
+            function loadSong(index) {
+                const song = songs[index];
+                
+                songTitle.textContent = song.title;
+                songArtist.textContent = song.artist;
+                coverImg.src = song.cover;
+                audio.src = song.audio;
+                durationEl.textContent = song.duration;
+                
+                // Update active playlist item
+                playlistItems.forEach(item => item.classList.remove('active'));
+                playlistItems[index].classList.add('active');
+                
+                // Jika sedang memutar, lanjutkan memutar
+                if (isPlaying) {
+                    audio.play();
+                    cover.classList.add('active');
+                }
+            }
+
+            // Fungsi untuk memutar atau menjeda
+            function togglePlay() {
+                if (isPlaying) {
+                    audio.pause();
+                    cover.classList.remove('active');
+                    playBtn.innerHTML = '<i>▶</i>';
+                } else {
+                    audio.play();
+                    cover.classList.add('active');
+                    playBtn.innerHTML = '<i>⏸</i>';
+                }
+                isPlaying = !isPlaying;
+            }
+
+            // Fungsi untuk update progress bar
+            function updateProgress(e) {
+                const { duration, currentTime } = e.srcElement;
+                const progressPercent = (currentTime / duration) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+                
+                // Format waktu
+                const currentMinutes = Math.floor(currentTime / 60);
+                const currentSeconds = Math.floor(currentTime % 60).toString().padStart(2, '0');
+                currentTimeEl.textContent = `${currentMinutes}:${currentSeconds}`;
+            }
+
+            // Fungsi untuk set progress bar ketika diklik
+            function setProgress(e) {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audio.duration;
+                audio.currentTime = (clickX / width) * duration;
+            }
+
+            // Fungsi untuk ganti lagu
+            function changeSong(direction) {
+                if (direction === 'next') {
+                    currentSongIndex = (currentSongIndex + 1) % songs.length;
+                } else {
+                    currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+                }
+                
+                loadSong(currentSongIndex);
+                
+                if (isPlaying) {
+                    audio.play();
+                }
+            }
+
+            // Event listeners
+            playBtn.addEventListener('click', togglePlay);
+            prevBtn.addEventListener('click', () => changeSong('prev'));
+            nextBtn.addEventListener('click', () => changeSong('next'));
+            audio.addEventListener('timeupdate', updateProgress);
+            audio.addEventListener('ended', () => changeSong('next'));
+            progressContainer.addEventListener('click', setProgress);
+
+            // Playlist item click
+            playlistItems.forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    currentSongIndex = index;
+                    loadSong(currentSongIndex);
+                    
+                    if (!isPlaying) {
+                        togglePlay();
+                    } else {
+                        audio.play();
+                    }
+                });
+            });
+
+            // Memuat lagu pertama
+            loadSong(currentSongIndex);
+        });
+    </script>
+</body>
+</html>
